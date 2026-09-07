@@ -1,24 +1,23 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
-let labStandalone: SupabaseClient | null = null;
+let labStandalone: SupabaseClient | null | undefined;
 
 function labClient() {
   const url = import.meta.env.VITE_LAB_SUPABASE_URL as string | undefined;
   const key = import.meta.env.VITE_LAB_SUPABASE_ANON_KEY as string | undefined;
-  if (!url || !key) return null;
-  if (!labStandalone) {
-    labStandalone = createClient(url, key, {
-      auth: { persistSession: true, storageKey: 'lab-auth' },
-    });
+  if (url && key) {
+    if (labStandalone === undefined) {
+      labStandalone = createClient(url, key, { auth: { persistSession: true, storageKey: 'lab-auth' } });
+    }
+    return labStandalone;
   }
-  return labStandalone;
+  return supabase;
 }
 
 export function getLabClient() {
   const client = labClient();
-  if (!client) {
-    throw new Error('Supabase Lab non configuré (VITE_LAB_SUPABASE_URL / VITE_LAB_SUPABASE_ANON_KEY)');
-  }
+  if (!client) throw new Error('Supabase Lab non configuré');
   return client;
 }
 
